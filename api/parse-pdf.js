@@ -1,6 +1,12 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 
-module.exports = async function handler(req, res) {
+export const config = {
+  api: { bodyParser: false },
+};
+
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ erro: "Method not allowed" });
   }
@@ -19,4 +25,4 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ erro: "Erro: " + e.message });
   }
-};
+}
