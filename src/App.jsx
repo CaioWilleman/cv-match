@@ -1,11 +1,6 @@
 import { useState, useRef } from "react";
 import * as mammoth from "mammoth";
-import * as pdfjsLib from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
 
 const PROMPT = (curriculo, vaga) => `Você é um especialista em recrutamento tech e ATS (Applicant Tracking System).
 
@@ -47,15 +42,20 @@ Retorne exatamente neste formato:
 Seja direto, técnico e honesto. Não seja genérico.`;
 
 async function extrairTextoPDF(arquivo) {
-  const buffer = await arquivo.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  let texto = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const pagina = await pdf.getPage(i);
-    const conteudo = await pagina.getTextContent();
-    texto += conteudo.items.map((item) => item.str).join(" ") + "\n";
-  }
-  return texto;
+  const formData = new FormData();
+  formData.append("file", arquivo);
+
+  const resposta = await fetch("/api/parse-pdf", {
+    method: "POST",
+    body: arquivo,
+    headers: {
+      "Content-Type": "application/octet-stream",
+    },
+  });
+
+  if (!resposta.ok) throw new Error("Erro ao processar PDF");
+  const dados = await resposta.json();
+  return dados.texto;
 }
 
 async function extrairTextoDOCX(arquivo) {
