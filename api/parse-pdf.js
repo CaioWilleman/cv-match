@@ -1,4 +1,4 @@
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 export const config = {
   api: {
@@ -22,17 +22,8 @@ export default async function handler(req, res) {
 
   try {
     const buffer = await lerBody(req);
-    const uint8 = new Uint8Array(buffer);
-    const pdf = await getDocument({ data: uint8 }).promise;
-
-    let texto = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const pagina = await pdf.getPage(i);
-      const conteudo = await pagina.getTextContent();
-      texto += conteudo.items.map((item) => item.str).join(" ") + "\n";
-    }
-
-    return res.status(200).json({ texto });
+    const dados = await pdfParse(buffer);
+    return res.status(200).json({ texto: dados.text });
   } catch (e) {
     return res.status(500).json({ erro: "Erro ao processar PDF: " + e.message });
   }
